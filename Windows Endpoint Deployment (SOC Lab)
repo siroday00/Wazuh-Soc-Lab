@@ -1,0 +1,604 @@
+---
+
+## Objective
+
+Deploy a Windows endpoint VM in VMware Workstation and integrate it into Wazuh SIEM for real-time security monitoring, log collection, and SOC analysis.
+
+---
+
+# VM CREATION (VMware Workstation)
+
+## What We Did
+
+We created a new Windows virtual machine that will act as the SOC endpoint.
+
+## How We Did It
+
+### Step 1: Create VM
+
+- Open VMware Workstation
+- Click **Create New Virtual Machine**
+- Select: **Installer disc image (ISO)**
+- Load Windows 10/11 ISO
+- Name VM: `Windows-Endpoint`
+
+---
+
+### Step 2: Allocate Resources
+
+Configured hardware as follows:
+
+- CPU: 2–4 cores
+- RAM: 4–8 GB
+- Disk: 50 GB (single file recommended)
+
+---
+
+### Step 3: Network Configuration
+
+- Set network adapter to: **Bridged Mode**
+- Purpose: allow direct communication with Wazuh server (192.168.10.19)
+
+---
+
+## Result
+
+Windows VM successfully created and ready for installation.
+
+---
+
+# WINDOWS OPERATING SYSTEM INSTALLATION
+
+## What We Did
+
+Installed Windows OS inside the VM.
+
+## How We Did It
+
+### Step 1: Boot Installation
+
+- Start VM
+- Boot from ISO
+- Click **Install Now**
+
+---
+
+### Step 2: Installation Process
+
+- Selected Windows edition
+- Chose **Custom Installation**
+- Created virtual disk partition
+- Installed Windows OS
+
+---
+
+### Step 3: Initial Setup (OOBE)
+
+- Created local user account
+- Set password
+- Completed setup wizard
+- Booted into Windows desktop
+
+---
+
+## Result
+
+Windows operating system successfully installed and operational.
+
+---
+
+# SYSTEM POST-INSTALL CONFIGURATION
+
+## What We Did
+
+Prepared Windows for SOC use.
+
+## How We Did It
+
+- Logged into Windows desktop
+- Verified system stability
+- Confirmed administrator access
+- Ensured system is responsive
+
+---
+
+## Result
+
+Windows system fully functional and stable.
+
+---
+
+# NETWORK CONFIGURATION & VALIDATION
+
+## What We Did
+
+Verified connectivity between Windows endpoint and Wazuh server.
+
+## How We Did It
+
+### Step 1: Check IP Address
+
+```bash
+ipconfig
+```
+
+Verified:
+
+- IP assigned in same subnet (192.168.10.x)
+
+---
+
+### Step 2: Test Connectivity
+
+```bash
+ping 192.168.10.19
+```
+
+---
+
+## Result
+
+- Network communication with Wazuh server confirmed
+- Endpoint reachable over LAN
+
+---
+
+# Install VMware Tools
+
+This is important BEFORE:
+
+- Wazuh agent
+- Sysmon
+- SOC work
+
+Because it gives:
+
+- copy/paste
+- proper display
+- better mouse support
+- stable VM interaction
+
+---
+
+# INSTALL VMware Tools
+
+## 1.1 Mount VMware Tools ISO
+
+In VMware top menu:
+
+```
+VM → Install VMware Tools
+```
+
+---
+
+# OPEN INSTALLER INSIDE WINDOWS
+
+Inside Windows:
+
+1. Open **File Explorer**
+2. Open:
+    
+    ```
+    This PC
+    ```
+    
+3. You should see:
+    
+    ```
+    VMware Tools
+    ```
+    
+4. Double click it
+
+---
+
+# RUN INSTALLER (if VMware Tools not automatically install)
+
+1. Run:
+    
+    ```
+    setup64.exe
+    ```
+    
+2. Select:
+    - Typical Installation
+3. Continue until installation completes
+
+---
+
+# REBOOT WINDOWS
+
+Restart VM after installation.
+
+---
+
+# STEP 5 — VERIFY IT WORKS
+
+Test:
+
+- copy/paste
+- resize window
+- mouse movement
+
+If working:
+
+✔ VMware Tools installed successfully
+
+# Install Wazuh Agent (Windows Endpoint → SIEM Connection)
+
+## Goal
+
+Connect your Windows VM to your Wazuh server so it starts sending logs.
+
+---
+
+# GET AGENT INSTALLER FROM WAZUH
+
+On your Wazuh Dashboard:
+
+1. Go to:
+    - **Agents → Deploy new agent**
+2. Select:
+    - **Windows**
+3. Fill:
+    - Wazuh Manager IP: `192.168.10.19`
+    - Agent name: `Windows-Endpoint`
+
+![image.png](attachment:1c99b0a6-2baf-4edd-b0ed-02b6b802ce49:image.png)
+
+![image.png](attachment:606ed141-9cde-406e-aada-3284509acaa5:image.png)
+
+1. Click **Generate installation command**
+
+---
+
+# STEP 2 — COPY INSTALL COMMAND
+
+![image.png](attachment:7a05d650-7e49-4025-b893-a286d5d7f054:image.png)
+
+You will see a command like:
+
+- download + install + register agent
+
+Copy it.
+
+---
+
+# STEP 3 — RUN IN WINDOWS (ADMIN CMD)
+
+On Windows VM:
+
+1. Open CMD as Administrator
+2. Paste the command
+3. Execute
+
+---
+
+# STEP 4 — START WAZUH SERVICE
+
+After installation:
+
+```
+net start wazuh
+```
+
+---
+
+# STEP 5 — VERIFY CONNECTION
+
+Go back to Wazuh Dashboard:
+
+- Go to **Agents**
+- Check status of:
+    - `Windows-Endpoint`
+
+Expected:
+
+✔ Active
+
+---
+
+# STEP 6 — CONFIRM LOG FLOW
+
+In Wazuh:
+
+- Security Events
+- or Agent view
+
+You should see:
+
+- Windows logs
+- authentication events (once you start using system)
+
+---
+
+# STOP POINT (IMPORTANT)
+
+Do NOT install Sysmon yet.
+
+First we confirm:
+
+✔ Agent is connected
+
+✔ Logs are flowing
+
+# Install Sysmon (Critical Telemetry Layer)
+
+## Why this is needed
+
+Right now Wazuh is only seeing:
+
+- basic Windows logs
+
+Sysmon adds:
+
+- process creation
+- command-line execution
+- network connections
+- malware-like behavior visibility
+
+Without Sysmon → your SOC lab is weak
+
+With Sysmon → your SOC lab becomes real
+
+---
+
+# STEP 1 — DOWNLOAD SYSMON
+
+On Windows VM:
+
+1. Open browser
+2. Go to official Sysinternals:
+
+[Sysmon (Microsoft Sysinternals)](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon?utm_source=chatgpt.com)
+
+1. Download **Sysmon ZIP**
+
+![image.png](attachment:78f8cf39-f5df-4ade-a50e-56eb9bf6229d:image.png)
+
+---
+
+# STEP 2 — EXTRACT FILES
+
+1. Right-click ZIP
+2. Extract to:
+
+```
+C:\Sysmon
+
+```
+
+![image.png](attachment:4b6574f7-ea32-46aa-980c-42dd38fd633b:image.png)
+
+---
+
+# STEP 3 — DOWNLOAD CONFIG FILE (IMPORTANT)
+
+We need a proper SOC config (not default Sysmon)
+
+1. Open:
+
+[Sysmon Modular Config](https://github.com/olafhartong/sysmon-modular?utm_source=chatgpt.com)
+
+1. Download repository as ZIP
+2. Extract it
+3. Find:
+
+```
+sysmonconfig.xml
+```
+
+1. Copy it into:
+
+```
+C:\Sysmon
+```
+
+![image.png](attachment:998621cc-b003-48d9-a161-b40f9f343bfa:image.png)
+
+---
+
+# STEP 4 — INSTALL SYSMON (ADMIN CMD)
+
+Open **Command Prompt as Administrator**
+
+Run:
+
+```
+cd C:\Sysmon
+```
+
+Then install:
+
+```
+sysmon64.exe -accepteula -i sysmonconfig.xml
+```
+
+![image.png](attachment:d142bc1f-f4c7-4e86-8941-aa7cf1923548:image.png)
+
+---
+
+# STEP 5 — VERIFY INSTALLATION
+
+Run:
+
+```
+sc query sysmon64
+```
+
+Expected:
+
+- STATE = RUNNING
+
+![image.png](attachment:3ffd9683-4b1f-46f9-bc29-de14de56591e:image.png)
+
+---
+
+# STEP 6 — CHECK LOGS
+
+Open Event Viewer:
+
+```
+Event Viewer →
+Applications and Services Logs →
+Microsoft →
+Windows →
+Sysmon →
+Operational
+```
+
+You should see:
+
+- Event ID 1 (process creation)
+- Event ID 3 (network connections)
+
+![image.png](attachment:a7808511-8ca7-43cf-9154-4da2406c3fbb:image.png)
+
+![image.png](attachment:bc802440-6638-4057-8c0a-e97e6c617eb7:image.png)
+
+---
+
+# WHAT YOU ACHIEVE AFTER THIS
+
+Your endpoint now produces:
+
+✔ Windows Security Logs
+
+✔ Wazuh logs
+
+✔ Sysmon telemetry
+
+✔ Process + network visibility
+
+# FIRST SOC ALERT (BRUTE FORCE DETECTION RULE)
+
+## Goal
+
+Create a rule that triggers when multiple failed logins happen (Event ID 4625).
+
+---
+
+# STEP 1 — UNDERSTAND WHAT WE’RE DETECTING
+
+We are targeting this event:
+
+- **Windows Event ID: 4625**
+- Meaning: failed logon (bad password / unknown user)
+
+---
+
+# STEP 2 — LOCATE WAZUH RULE FILE (SERVER SIDE)
+
+On your Wazuh server:
+
+```
+sudo nano /var/ossec/etc/rules/local_rules.xml
+```
+
+This is where custom SOC rules are added.
+
+---
+
+# STEP 3 — ADD BASE ALERT RULE
+
+Paste this rule:
+
+```
+<groupname="windows,authentication,bruteforce,">
+
+<ruleid="100100"level="10">
+<if_sid>60122</if_sid>
+<match>4625</match>
+<description>Windows: Multiple failed logon attempts detected (possible brute force)</description>
+<group>authentication_failed,bruteforce,</group>
+</rule>
+
+</group>
+```
+
+---
+
+# STEP 4 — RESTART WAZUH MANAGER
+
+```
+sudo systemctlrestart wazuh-manager
+```
+
+---
+
+# STEP 5 — GENERATE ATTACK AGAIN (WINDOWS)
+
+On Windows VM:
+
+- attempt wrong password 5–10 times
+- same user (`soc_test`)
+
+---
+
+# STEP 6 — CHECK WAZUH ALERTS
+
+Go to:
+
+- **Wazuh Dashboard → Security Events**
+
+Now filter:
+
+- rule.id: `100100`
+
+---
+
+# WHAT SHOULD HAPPEN
+
+You should now see:
+
+✔ NEW ALERT (not just log)
+
+✔ severity level (10)
+
+✔ description: brute force detection
+
+✔ grouped authentication failures
+
+---
+
+# KEY DIFFERENCE YOU JUST CREATED
+
+| Before | After |
+| --- | --- |
+| Raw logs | Security alert |
+| Passive data | Active detection |
+| Observation | SOC response trigger |
+
+---
+
+# REAL SOC CONCEPT YOU JUST LEARNED
+
+You are now doing:
+
+> Detection Engineering (Level 1)
+> 
+
+This is what SOC engineers actually do:
+
+- convert logs → rules
+- define attack patterns
+- reduce false positives
+
+---
+
+# IMPORTANT NEXT STEP (DON’T SKIP)
+
+Right now your rule is **basic (single-event based)**.
+
+Next upgrade is:
+
+## 👉 REAL BRUTE FORCE DETECTION LOGIC
+
+We will improve it to:
+
+- multiple failures threshold
+- time window (e.g. 5 events in 1 min)
+- same user correlation
+
+This is what real SOC teams use.
