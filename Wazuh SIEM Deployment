@@ -1,0 +1,400 @@
+SOC Automation Lab — Wazuh SIEM Deployment
+
+### Objective
+
+Deploy a fully functional Wazuh SIEM server to serve as the central logging, monitoring, and detection platform for the SOC lab environment.
+
+### Version Information
+
+| Component | Version |
+| --- | --- |
+| Wazuh | 4.14.5 |
+| Operating System | Ubuntu Desktop 22.04 LTS |
+| Virtualization Platform | VMware Workstation |
+
+---
+
+# Architecture Overview
+
+```
+Endpoints → Wazuh Manager → Indexer → Dashboard
+```
+
+### Component Roles
+
+| Component | Purpose |
+| --- | --- |
+| Wazuh Manager | Log collection and detection engine |
+| Wazuh Indexer | Stores and indexes event data |
+| Wazuh Dashboard | Web-based SIEM interface |
+| Filebeat | Ships alerts/logs to indexer |
+
+---
+
+# VM Configuration
+
+## Virtual Machine Information
+
+| Setting | Value |
+| --- | --- |
+| VM Name | Wazuh-SIEM |
+| OS | Ubuntu Desktop 22.04 LTS |
+| CPU | 4 vCPU |
+| RAM | 8–12 GB |
+| Storage | 60 GB |
+| Network Mode | Bridged |
+
+---
+
+# Ubuntu Installation
+
+## Installation Type
+
+- Ubuntu Desktop 22.04 LTS
+- Normal installation
+
+## User Configuration
+
+| Field | Value |
+| --- | --- |
+| Username | wazuh |
+| Hostname | wazuh |
+
+---
+
+# Initial System Preparation
+
+## System Update
+
+### Command
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### Purpose
+
+Updates installed packages and ensures system stability before Wazuh deployment.
+
+---
+
+## Essential Package Installation
+
+### Command
+
+```bash
+sudo apt install curl wget unzip net-tools apt-transport-https -y
+```
+
+### Purpose
+
+Installs utilities required for:
+
+- package downloads
+- network troubleshooting
+- Wazuh installation
+
+---
+
+# VMware Integration Configuration
+
+## VMware Tools Installation
+
+### Command
+
+```bash
+sudo apt install open-vm-tools open-vm-tools-desktop -y
+```
+
+### Purpose
+
+Enables:
+
+- clipboard sharing
+- drag and drop
+- improved VM integration
+
+---
+
+## VMware Guest Isolation Settings
+
+### Enabled Options
+
+- Enable Copy and Paste
+- Enable Drag and Drop
+
+### Purpose
+
+Improves usability during:
+
+- command execution
+- configuration editing
+- documentation collection
+
+---
+
+# Network Configuration
+
+## Interface Information
+
+### Command
+
+```bash
+ip a
+```
+
+### Result
+
+| Interface | IP Address |
+| --- | --- |
+| ens33 | 192.168.10.19 |
+
+---
+
+## Connectivity Validation
+
+### Command
+
+```bash
+ping google.com
+```
+
+### Purpose
+
+Confirms:
+
+- internet access
+- DNS functionality
+- package repository connectivity
+
+---
+
+# Wazuh Installation
+
+## Installation Method
+
+All-in-one deployment using official Wazuh installation assistant.
+
+### Installed Components
+
+- Wazuh Manager
+- Wazuh Indexer
+- Wazuh Dashboard
+- Filebeat
+
+---
+
+## Installer Download
+
+### Command
+
+```bash
+curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh
+```
+
+### Purpose
+
+Downloads the official Wazuh installation assistant.
+
+---
+
+## Wazuh Deployment
+
+### Command
+
+```bash
+sudo bash wazuh-install.sh -a
+```
+
+### Purpose
+
+Performs automated installation and configuration of:
+
+- Wazuh Manager
+- Wazuh Indexer
+- Dashboard
+- Security certificates
+- Internal users
+- Filebeat integration
+
+---
+
+# Installation Issues Encountered
+
+## Issue 1 — Broken dpkg State
+
+### Symptoms
+
+```
+Error: Sub-process /usr/bin/dpkg returned an error code (1)
+```
+
+### Root Cause
+
+Interrupted package configuration during Ubuntu setup.
+
+### Resolution Commands
+
+```bash
+sudo dpkg --configure -a
+sudo apt --fix-broken install -y
+```
+
+---
+
+## Issue 2 — initramfs / kdump-tools Failure
+
+### Symptoms
+
+```
+update-initramfs is disabled since running on read-only media
+```
+
+### Root Cause
+
+Kernel post-install hook failure caused by kdump-tools during initramfs generation.
+
+### Resolution
+
+- Removed broken kdump-tools integration
+- Reconfigured package system
+- Reinstalled clean environment
+
+---
+
+## Issue 3 — Partial Wazuh Installation
+
+### Symptoms
+
+```
+ERROR: Wazuh indexer already installed.
+```
+
+### Root Cause
+
+Previous failed installation left partial indexer artifacts.
+
+### Resolution
+
+Performed:
+
+- service cleanup
+- package removal
+- reinstall from clean state
+
+---
+
+# Successful Installation Output
+
+## Dashboard Access
+
+| Item | Value |
+| --- | --- |
+| URL | [https://192.168.10.19](https://192.168.10.19/) |
+| Username | admin |
+
+---
+
+# Service Validation
+
+## Installed Services
+
+| Service | Purpose |
+| --- | --- |
+| wazuh-manager | Detection engine |
+| wazuh-indexer | Event indexing |
+| wazuh-dashboard | SIEM web interface |
+| filebeat | Event forwarding |
+
+---
+
+## Service Validation Commands
+
+### Wazuh Manager
+
+```bash
+sudo systemctl status wazuh-manager
+```
+
+### Indexer
+
+```bash
+sudo systemctl status wazuh-indexer
+```
+
+### Dashboard
+
+```bash
+sudo systemctl status wazuh-dashboard
+```
+
+### Filebeat
+
+```bash
+sudo systemctl status filebeat
+```
+
+---
+
+# Dashboard Validation
+
+## Successful Access Indicators
+
+- Login page accessible
+- Dashboard loads correctly
+- Cluster health available
+- No agent errors
+- Indexer operational
+
+---
+
+# Current Environment Status
+
+| Component | Status |
+| --- | --- |
+| Ubuntu VM | Operational |
+| Wazuh Manager | Running |
+| Wazuh Indexer | Running |
+| Wazuh Dashboard | Running |
+| Filebeat | Running |
+| Dashboard Access | Successful |
+
+---
+
+# Current Deployment State
+
+## Completed
+
+- Ubuntu VM deployment
+- VMware integration
+- Wazuh 4.14.5 installation
+- Dashboard access verification
+- Core SIEM deployment
+
+---
+
+## Pending
+
+- Windows endpoint deployment
+- Wazuh agent installation
+- Sysmon integration
+- Detection engineering
+- TheHive integration
+- Cortex integration
+- Shuffle SOAR deployment
+
+---
+
+# Next Planned Phase
+
+## Phase 2 — Endpoint Integration
+
+### Objectives
+
+- Deploy Windows endpoint VM
+- Install Wazuh agent
+- Configure Sysmon telemetry
+- Validate real-time event ingestion
+- Generate first SOC alerts
+
+---
